@@ -32,6 +32,23 @@ To run UN-CNVc, you will need :
 ## Output
 
 * `[output_filename].stats`. A file with the following header, used to filter your CNVs:
+   * `chr` 
+   * `start`
+   * `stop`
+   * `hom` : number of homozygous deletions (depth=0)
+   * `het` : number of heterozygous deletions (depth=0.5)
+   * `normal` : number of samples with no variation
+   * `dup` : number of samples with duplications (depth=k.0.5, with k>2)
+   * `del_af` : frequency of deletion
+   * `del_ratio` : ratio of deletions to duplications
+   * `avg_del_p` : average confidence of the deletion calls
+   * `del_hc` : number of high-confidence calls
+   * `del_lc` : number of low-confidence calls (`confidence=5%` by default so low-confidence is really low confidence.)
+   * `del_hc_total_ratio` : fraction of dels that are high-confidence 
+   * `avg_dup_p` : average confidence of duplications
+   * `dup_hc` : number of high-confidence duplication calls
+   * `dup_lc`  : number of low-confidence dup calls
+   * `dup_hc_total_ratio` : fraction of dups that are high-confidence
 * `[output_filename].pdf` A diagnostics plot, used to visualise your results.
 ![example.png](example.png)
    * The top left panel represents the piecewise constant relative depth intervals. There will be a cluster around 1, representing the normal depth. Horizontal dashed intervals represent expected locations of CNV segments (het/hom del or dup). Vertical highlighted regions are regions called as variants by UN-CNVc.
