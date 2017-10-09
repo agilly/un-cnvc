@@ -1,7 +1,9 @@
-# un-cnvc: the Unimaginatively-Named Copy Number Variant Caller
-A fast way to call copy number variants from SNP callsets
+# UN-CNVc: the Unimaginatively-Named Copy Number Variant Caller
 
 > We would like to thank the United Nations for serendipitously lending their name to our caller.
+
+## Rationale
+Unlike all of the CNV callers we know, `UN-CNVc` uses VCFs to call copy number variants. It is able to call CNVs on 1,500 samples using VCFs called using 20x depth WGS data in _20 minutes_ with basic mapping/reducing.
 
 ## Prerequisites
 To run UN-CNVc, you will need :
@@ -13,7 +15,7 @@ To run UN-CNVc, you will need :
 
 * First, generate per-sample, per-chromosome depths with `for i in {1..22}; do bcftools stats -s ... chr$i.vcf.gz; done`. Then extract relevant fields with `grep '^PSC' | cut -f3,10 > chr$i.avgdepth` This is going to be our baseline depth.
 * Generate per-sample site-level depths with `bcftools view -r [region of interest] chr$i.vcf.gz  | bcftools query -f '%CHROM\t%POS\t[%DP\t]\n' > input.dp`. This is the main input of our script.
-* Downsample depth to piecewise constant functions with `./call_sv.R input.dp chr$i.avgdepth out.sv`
+* Downsample depth to piecewise constant functions with `./call_sv.R input.dp chr$i.avgdepth out.sv`. (This step and the above can be run using our basic wrapper `searchsv.sh`)
 * Call and genotype SVs:
 
 ```bash
@@ -30,7 +32,7 @@ To run UN-CNVc, you will need :
 
 * `[output_filename].stats`. A file with the following header, used to filter your CNVs:
 * `[output_filename].pdf` A diagnostics plot, used to visualise your results.
-!()[example.pdf]
+!()[example.png]
 * * The top left panel represents the piecewise constant relative depth intervals. There will be a cluster around 1, representing the normal depth. Horizontal dashed intervals represent expected locations of CNV segments (het/hom del or dup). Vertical highlighted regions are regions called as variants by UN-CNVc.
 * * Top right panel is a histogram of the observed segment depths.
 * * Bottom left panel represents the statistics used by the caller to call variable regions.
