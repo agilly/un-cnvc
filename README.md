@@ -32,7 +32,7 @@ To run UN-CNVc, you will need :
 
 * `[output_filename].stats`. A file with the following header, used to filter your CNVs:
 * `[output_filename].pdf` A diagnostics plot, used to visualise your results.
-!()[example.png]
+![example.png](example.png)
 * * The top left panel represents the piecewise constant relative depth intervals. There will be a cluster around 1, representing the normal depth. Horizontal dashed intervals represent expected locations of CNV segments (het/hom del or dup). Vertical highlighted regions are regions called as variants by UN-CNVc.
 * * Top right panel is a histogram of the observed segment depths.
 * * Bottom left panel represents the statistics used by the caller to call variable regions.
