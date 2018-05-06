@@ -242,7 +242,7 @@ plot_cnv_qc=function(stats, outdf, plinkcall, alldepth, segments){
         alldepth$pos=NULL
   # general plot cfg
   #png(paste(obase, "png", sep="."), width=1500, height=800)
-  par(mfrow=c(2,2), mar = c(2,2,1,2))
+  par(mfrow=c(2,2), mar = c(2.8,2.8,1,1))
 
   # plot 
 
@@ -262,11 +262,11 @@ plot_cnv_qc=function(stats, outdf, plinkcall, alldepth, segments){
   dmin=alldepth[pos>start & pos<stop,];
         
   plot(u/chrdp, col=attgeno+1, pch=19, xaxt="n", xlab="samples", ylab="normalised depth", 
-       main=paste(chr, paste(start, stop, sep="-"), sep=":"), ylim=c(0, topcp+0.1));
+       main=paste(chr, paste(start, stop, sep="-"), sep=":"), ylim=c(0, topcp+0.1),  mgp=c(2,1,0));
   lal=apply(dmin, 1, function(x){as.numeric(as.character(x))/chrdp});
   nsnps=ncol(lal)
   k=ceiling(nsnps/10)
-  plot(0, xlim=c(1, nsnps), ylim=c(0, topcp+0.1), type="n", xaxt="n", xlab="position", ylab="normalised depth", main=paste(ncol(lal), "SNPs"));
+  plot(0, xlim=c(1, nsnps), ylim=c(0, topcp+0.1), type="n", xaxt="n", xlab="position", ylab="normalised depth", main=paste(ncol(lal), "SNPs"),  mgp=c(2,1,0));
     cat(" [from script (plot_cnv_qc) (DEBUG):]      Drawing lines with n=", nsnps, " and k=", k, " for event ",chr, ":",start, "-", stop, " ", nrow(dmin)/9, "\n")
   #lal=lal[1:3,]
   apply(lal, 1, function(x) {lines(rollmean(x, k))})
@@ -277,12 +277,12 @@ plot_cnv_qc=function(stats, outdf, plinkcall, alldepth, segments){
   outdf$ndp=outdf$region_depth/outdf$chrwide_depth
   m=merge(pmin, outdf, by="sample")
   relevant=segments[segments$min<x[3] & segments$max>x[2],]
-  plot(m$ndp, m$adp, pch=m$copy_number, col=m$acall*2+1, xlab="average depth(method 1)", ylab="segment depth(method 2)",
+  plot(m$ndp, m$adp, pch=m$copy_number, col=m$acall*2+1, xlab="average depth(method 1)", ylab="segment depth(method 2)",  mgp=c(2,1,0),
   main="color=segment call, symbol=depth call", ylim=c(0, max(relevant$depth)+0.2))
 
   ## last plot: segments
   
-  plot(0, type="n", xlim=c(start-(stop-start)*0.1, stop+(stop-start)*0.1), ylim=c(0, max(relevant$depth)+0.2), xlab="position", ylab="depth")
+  plot(0, type="n", xlim=c(start-(stop-start)*0.1, stop+(stop-start)*0.1), ylim=c(0, max(relevant$depth)+0.2), xlab="position", ylab="depth",  mgp=c(2,1,0))
   rect(start, -1, stop, 2*max(relevant$depth), border=NA, col="lightgray")
   badsamples=pmin$sample[pmin$n>1]
   relevant$color="darkslategray"
@@ -318,8 +318,8 @@ genotype_segment=function(allbreaks, calls, include_dups){
     for(s in allsamples){
     r=relevant[relevant$sample==s,]
     nr=nrow(r)
-    quot=sum(r$length*r$assigned_depth)/(event_length)
-    avgp=sum(r$length*r$p_value)/(event_length)
+    quot=sum(r$length*r$assigned_depth)/sum(r$length)
+    avgp=sum(r$length*r$p_value)/sum(r$length)
     #print(r)
     #print(c(nr, event_length, quot, avgp))
     quot=round(2*quot)/2
@@ -354,19 +354,21 @@ genotype_segment=function(allbreaks, calls, include_dups){
       # select only the depth segments that overlap with the region
       a=alldepth[alldepth$min<=x[3] & alldepth$max>=x[2],];
       a$min[a$min<x[2]]=x[2]
-      a$min[a$max>x[3]]=x[3]
+      a$max[a$max>x[3]]=x[3]
       # get list of samples that carry hom/het deletions
       o=NULL
       for(s in samples){
         sampledat=a[a$sample==s,]
         n=nrow(sampledat)
         sampledat$l=abs(sampledat$max-sampledat$min)
-        dp=mean(sampledat$depth*sampledat$l)/sum(sampledat$l)
-        p=mean(sampledat$p_value*sampledat$l)/sum(sampledat$l)
-        adp=mean(sampledat$assigned_depth*sampledat$l)/sum(sampledat$l)
+        dp=sum(sampledat$depth*sampledat$l)/sum(sampledat$l)
+        p=sum(sampledat$p_value*sampledat$l)/sum(sampledat$l)
+        adp=sum(sampledat$assigned_depth*sampledat$l)/sum(sampledat$l)
         topcp=ceiling(max(adp, na.rm=T)*2)/2;
         possibles=seq(0, topcp, by=0.5)
-        acall=sapply(adp, function(x, possibles){v=abs(x-possibles);return(possibles[v==min(v)])}, possibles=possibles)[1]
+        v=abs(adp-possibles)
+        acall=possibles[v==min(v)]
+        acall=acall[1]
         o=rbind(o, data.frame(sample=s, chr=x[1], start=x[2], stop=x[3], n=n, dp=dp, adp=adp, acall=acall,p=p))
       }
       return(o)
@@ -392,7 +394,7 @@ call_sv=function(dfcall, chrwide_depth, cparm){
     snames=chrwide_depth$V1
     chrwide_depth=chrwide_depth$V2
     names(chrwide_depth)=snames
-    colnames(dfcall)=c("chr", "pos", snames)
+    #colnames(dfcall)=c("chr", "pos", snames)
     cat(" [from script (call_sv):] Read per-sample depths.\n") 
     if(length(avgmeans_region)!=length(chrwide_depth)){
   stop("Error : number of samples different from number of depth columns.")
@@ -411,7 +413,6 @@ call_sv=function(dfcall, chrwide_depth, cparm){
                         i=i+1
             flush.console()
         regiondata=data.frame(pos=dfcall$pos, dp=dfcall[,selected_sample]/chrwide_depth[selected_sample])
-
         tree <- rpart(dp ~ pos, data=regiondata, control=rpc)
         x=regiondata$pos
         s <- seq(min(x), max(x), by=100)
