@@ -79,3 +79,18 @@ A file with the following header, used to filter your CNVs:
    * `dup_hc_total_ratio` : fraction of dups that are high-confidence
 * `[output_filename].pdf` A diagnostics plot, used to visualise your results.
 
+## Manual genotyper
+
+In case you know the boundaries of your CNV and want to directly genotype them, we provide a manual genotyper. It is run as follows:
+
+```bash
+./direct.closest.R [alldp_file] [chrwide_depth_file] [outfile_base] [chr] [start] [end]
+```
+
+It allows the genotyping of very small deletions such as the _GSTM1_, which is too small for `un-cnvc` to detect automatically with correct boundaries:
+![GSTM_bad.png](GSTM_bad.png)
+
+The manual genotyper, in contrast, provides much better genotypes:
+![GSTM_good.png](GSTM_good.png)
+
+The manual genotyper only operates in `means` mode.
