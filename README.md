@@ -40,7 +40,7 @@ After that, only 1 call is necessary:
    * `-u|--include-dups [0|1]` controls whether duplication-only events are called.
       * `0` calls only deletions and calls duplications the same as no CNV. This generates a PLINK `.ped/.map` dataset.
       * `1` calls duplications as well as deletions. This generates a PLINK CNV dataset (`.cnv`).
-   * `-m|--method [segment|means|both]` is the genotyping method used. See below for a discussion. We advise to use `both`.
+   * `-m|--method [segment|means|both]` is the genotyping method used. See below for a discussion. We advise to use `both`. Ignored if `-s` is set.
    * `-s|--no-genotypes` suppresses genotyping output, just produces diagnostics plots. Useful for tuning the `-c` parameter.
 
 ## Output
