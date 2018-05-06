@@ -1,0 +1,129 @@
+#!/bin/bash
+
+CP=2.5e-3
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+POSITIONAL=()
+NOGENO=""
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    -i|--interval)
+    INTERVAL="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -v|--vcf)
+    VCF="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -d|--depth-file)
+    CHRDP="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -o|--out)
+    OUT="$2"
+    shift # past argument
+    ;;
+    -c|--cp)
+    CP="$2"
+    shift # past argument
+    ;;
+    -u|--include-dups)
+    DUPS="$2"
+    shift # past argument
+    ;;
+    -m|--method)
+    METHOD="$2"
+    shift # past argument
+    ;;
+   -s|--no-genotypes)
+    NOGENO=1
+    shift # past argument
+    ;;
+    *)    # unknown option
+    POSITIONAL+=("$1") # save it in an array for later
+    shift # past argument
+    ;;
+esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+echo ' ___  ___  ________                  ________  ________   ___      ___ ________     
+|\  \|\  \|\   ___  \               |\   ____\|\   ___  \|\  \    /  /|\   ____\    
+\ \  \\\  \ \  \\ \  \  ____________\ \  \___|\ \  \\ \  \ \  \  /  / | \  \___|    
+ \ \  \\\  \ \  \\ \  \|\____________\ \  \    \ \  \\ \  \ \  \/  / / \ \  \       
+  \ \  \\\  \ \  \\ \  \|____________|\ \  \____\ \  \\ \  \ \    / /   \ \  \____  
+   \ \_______\ \__\\ \__\              \ \_______\ \__\\ \__\ \__/ /     \ \_______\
+    \|_______|\|__| \|__|               \|_______|\|__| \|__|\|__|/       \|_______|
+    '  
+echo
+echo '   --------------------------------------------------------------------------------'
+echo '  |    A fast VCF-based CNV caller for WGS data.                                   |'
+echo '  |                                                         by Arthur Gilly        |'
+echo '  |    v 1.1 (May 2018)                                     github.com/agilly      |'
+echo '   --------------------------------------------------------------------------------'
+echo
+echo ARGUMENTS
+echo ---------
+echo Input/output controls:
+echo ' - VCF FILE                = '"${VCF}"
+echo ' - CHROMOSOME DEPTH FILE   = '"${CHRDP}"
+echo ' - INTERVAL TO CALL        = '"${INTERVAL}"
+echo ' - OUTPUT PREFIX           = '"${OUT}"
+echo ' - CALLING METHOD          = '"${METHOD}"
+echo ' - INCLUDE DUPLICATES      = '"${DUPS} (will be coerced to BOOL by R, good luck)"
+
+if [[ -z "$NOGENO" ]]; then
+echo ' - GENOTYPING IS ENABLED'
+NOGENO=0
+else
+echo ' - GENOTYPING IS DISABLED, PLOT ONLY'
+fi
+echo
+echo Parameters:
+echo ' - COMPLEXITY (reg. tree)  = '"${CP}"
+
+
+if [[ ! -f $VCF ]] || [[ ! -f $VCF.tbi ]]; then
+    err=1
+    >&2 echo ERROR : VCF file not found. Make sure \" $VCF \" exists and is tabixed.
+fi
+
+if [[ ! -f $CHRDP ]]; then
+    err=1
+    >&2 echo ERROR : Depth file not found. Make sure \" $CHRDP \" exists.
+fi
+
+if [[ -n $err ]]; then
+    exit
+fi
+
+INTERVAL=$(echo $INTERVAL | sed 's/^chr//')
+chr=$(echo $INTERVAL | sed 's/\:.*//')
+start=$(echo $INTERVAL | sed 's/.*\://;s/\-.*//')
+end=$(echo $INTERVAL | sed 's/.*\-//')
+
+if [[ -z $chr ]] || [[ -z $start ]] || [[ -z $end ]]; then
+    >&2 echo "Error while validating interval \"$INTERVAL\" : yielded chr $chr start $start end $end."
+    exit
+fi
+
+METHOD=$(echo $METHOD | awk '{print tolower($0)}')
+if [[ "$METHOD" != "segment" ]] && [[ "$METHOD" != "means" ]] && [[ "$METHOD" != "both" ]]; then
+    >&2 echo "Error while parsing arguments: METHOD must be one of SEGMENT, MEANS or BOTH."
+	exit
+fi
+
+echo
+echo " Extracting depth information . . ."
+cat <(echo -e "chr\tpos\t"$(zgrep -m1 '^#CHROM' $VCF | cut -f10-) | tr ' ' '\t') <(bcftools view -r 'chr'$INTERVAL $VCF  | bcftools query -f '%CHROM\t%POS\t[%DP\t]\n' | sed 's/\./NA/g;s/\t$//')> $OUT.$chr.${start}-${end}.alldp
+echo Done.
+echo " Handing over to R . . ."
+$DIR/cnvc.R $OUT.$chr.${start}-${end}.alldp $CHRDP $OUT.$chr.${start}-${end} $DUPS $CP $METHOD $NOGENO
+echo 
+echo "Finished."
