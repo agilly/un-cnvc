@@ -43,6 +43,10 @@ After that, only 1 call is necessary:
    * `-m|--method [segment|means|both]` is the genotyping method used. See below for a discussion. We advise to use `both`. Ignored if `-s` is set.
    * `-s|--no-genotypes` suppresses genotyping output, just produces diagnostics plots. Useful for tuning the `-c` parameter.
 
+## Genotyping
+
+`un-cnvc` provides two genotyping algorithms: segment-based, which used levels regressed using piecewise constant regression, and means-based, which uses piecewise constant regressions only to call CNV regions, but then uses average depth over these regions to genotype samples. The latter gives more accurate results in small regions, but is also less robust to errors in estimating event boundaries. We advise to use the QC plots produced in the output to choose the method that best fits any given event. 
+
 ## Output
 * `[output_filename].[interval_to_call].alldp`. A (large) file which contains depth measurement for all samples at all markers in the region.
 * `[output_filename].[interval_to_call].window.pdf`. A graph such as the one below:
@@ -59,25 +63,28 @@ After that, only 1 call is necessary:
    * The bottom right panel represents piecewise constant intervals, with samples containing multiple intervals in the region coloured in red. Check that most non-REF intervals are about the same length and largely overlap.
    * The bottom left panel is a diagnostics plot comparing genotyping results from both methods. Ideally, results will be similar, meaning that `n` clusters of mostly identical colors and shapes should appear on the diagonal of the plot. For small events this will not be the case, though, and this plot should help you decide which method to use, or whether to discard this SV as part of your QC pipeline.
 
-A file with the following header, used to filter your CNVs:
+*  `[output_filename].[interval_to_call].genotypes.csv`. A comma-separated values file, with the following header:
+   * `sample`
    * `chr` 
    * `start`
    * `stop`
-   * `hom` : number of homozygous deletions (depth=0)
-   * `het` : number of heterozygous deletions (depth=0.5)
-   * `normal` : number of samples with no variation
-   * `dup` : number of samples with duplications (depth=k.0.5, with k>2)
-   * `del_af` : frequency of deletion
-   * `del_ratio` : ratio of deletions to duplications
-   * `avg_del_p` : average confidence of the deletion calls
-   * `del_hc` : number of high-confidence calls
-   * `del_lc` : number of low-confidence calls (`confidence=5%` by default so low-confidence is really low confidence.)
-   * `del_hc_total_ratio` : fraction of dels that are high-confidence 
-   * `avg_dup_p` : average confidence of duplications
-   * `dup_hc` : number of high-confidence duplication calls
-   * `dup_lc`  : number of low-confidence dup calls
-   * `dup_hc_total_ratio` : fraction of dups that are high-confidence
-* `[output_filename].pdf` A diagnostics plot, used to visualise your results.
+   * **Rows relevant to segment-based genotyping:**
+     * `segments` : number of segments in the region for that sample (a low number is a good sign)
+     * `segment_weighted_depth` : depth of segments, weighted by their lengths
+     * `segment_weighted_assigned_depth` : assigned depths of segments, weighted by their lengths
+     * `segment_total_assigned_depth` : depth call for segment genotyping
+     * `segment_weighted_pvalue` : weighted probability of call being true
+   * **Rows relevant to means-based genotyping:**
+     * `chrwide_depth` : chromosome-wide depth for that sample
+     * `region_depth` : average depth for that sample in the CNV region
+     * `means_assigned_depth` : depth call for means genotyping
+     * `means_inverse_confidence` : One minus probability of call being true
+
+## Tuning the complexity parameter
+
+The complexity parameter is an argument passed to the regression tree method, which determines the increase in likelihood below which the model will stop trying to optimise the model further. A smaller value results in a better fit to the depth, in other words, a more erratic piecewise constant function. Smaller values increase sensitivity, but decrease specificity. Large values (such as the default 0.01) will give a low false positive rate but will only detect large events (~>50kb). More discussion on this topic can be found on the [documentation page](https://www.rdocumentation.org/packages/rpart/versions/4.1-13/topics/rpart.control) for the `rpart.control` method.
+
+A good idea is to tune the parameter to your needs, by gradually lowering the parameter until it detects the deletion you are interested in. Common deletions to use for this are the _RHD_ and _GSTM1_ null mutations.
 
 ## Manual genotyper
 
