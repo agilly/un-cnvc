@@ -440,6 +440,8 @@ suppressMessages(library(rpart))
 
 ## main depth per genotype file (longest to load)
 dfcall = fread(freal, header=T)
+mainchr=as.numeric(sub("chr", "", dfcall$chr[1]))
+
 #colnames(dfcall)[c(1,2)]=c("chr", "pos")
 #print(colnames(dfcall))
 ## per-chromosome depth per sample
@@ -524,7 +526,8 @@ sv2=svs
 
 calls=svs
 calls[,2]=svs[,3]-svs[,2]*5000
-
+calls[,1]=mainchr
+                
 ## At this point, the SVs are called using the two methods, but not genotyped.
 
 ## We plot the CNVs in the region
