@@ -515,7 +515,10 @@ sv1=svs
 ##### REGION CALLING 2 :
 a=rle(numhethom2>1) ## arbitrary threshold here we come
 svs=t(rbind(a$values, a$lengths, min(discr)+cumsum(a$lengths)*5000))
+print(svs)
 svs=svs[svs[,1]==1,,drop=F]
+print("POST")
+print(svs)
 sv2=svs
 
 
