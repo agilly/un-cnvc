@@ -13,6 +13,7 @@ genotype_closest=function(alldepth, chrdp, stat){
     ## say hello
     cat(" [from script (genotype_closest):] Genotyping using interval-wide means\n")
     ## prepare
+	print(stat)
         chr=unique(alldepth$chr)
         alldepth$chr=NULL
         pos=alldepth$pos
@@ -29,9 +30,12 @@ genotype_closest=function(alldepth, chrdp, stat){
         dmin=alldepth[pos>start & pos<stop,];
         numsnp=nrow(dmin)
         obase=paste(chr, start, stop, numsnp, sep=".")
+	print(dim(dmin))
         u=apply(dmin, 2, function(x) mean(as.numeric(as.character(x)), na.rm=T));
         topcp=ceiling(max(u/chrdp$V2, na.rm=T)*2)/2;
-        genos=seq(0, topcp, by=0.5);
+        print(topcp)
+	print(max(u/chrdp$V2, na.rm=T)*2)
+	genos=seq(0, topcp, by=0.5);
         attgeno=sapply(u/chrdp$V2, function(x){
       testv=abs(x-genos);
       ret=(0:(length(genos)-1))[testv==min(testv)];
@@ -95,6 +99,10 @@ alld=fread(chrdp, header=F)
 stat=data.table(chr=chr, start=start, stop=end)
 closest=genotype_closest(d, alld, stat)
 print(head(closest))
+
+towrite=closest
+towrite$norm_depth=towrite$region_depth/towrite$chrwide_depth
+write.table(towrite, paste(out, "tsv", sep="."), quote=F, col.names=T, row.names=F, sep="\t")
 
 png(paste(out, "png", sep="."), width=1000)
 plot_cnv_qc(closest, d)
