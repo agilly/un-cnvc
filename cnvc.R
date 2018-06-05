@@ -449,6 +449,7 @@ chrwide_depth=read.table(chrdp, stringsAsFactors=F, header=F)
 
 ## perform piecewise constant regression
 allbreaks=call_sv(dfcall, chrwide_depth, complexity)
+write.table(allbreaks, paste(out, "regressed.tsv", sep="."), row.names=F, quote=F, sep="\t")
 alldepth=allbreaks
 confidence=0.05
 

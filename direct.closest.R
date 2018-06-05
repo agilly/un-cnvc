@@ -24,9 +24,10 @@ genotype_closest=function(alldepth, chrdp, stat){
     allout=NULL
     for(i in 1:nrow(stat)){
         chr=stat[i,]$chr
-        start=stat[i,]$start
-        stop=stat[i,]$stop
-        
+        start=as.numeric(stat[i,]$start)
+        stop=as.numeric(stat[i,]$stop)
+	#print(paste(class(start), start, class(stop), stop, class(pos), pos[1]))
+        #print(length(pos[pos>start & pos<stop]))
         dmin=alldepth[pos>start & pos<stop,];
         numsnp=nrow(dmin)
         obase=paste(chr, start, stop, numsnp, sep=".")
