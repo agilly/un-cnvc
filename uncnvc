@@ -20,7 +20,7 @@ case $key in
     shift # past argument
     shift # past value
     ;;
-    -d|--depth-file)
+    -d|--chr-depth-file)
     CHRDP="$2"
     shift # past argument
     shift # past value
@@ -69,7 +69,7 @@ echo
 echo '   --------------------------------------------------------------------------------'
 echo '  |    A fast VCF-based CNV caller for WGS data.                                   |'
 echo '  |                                                         by Arthur Gilly        |'
-echo '  |    v 1.1 (May 2018)                                     github.com/agilly      |'
+echo '  |    v 1.2 (March 2019)                                   github.com/agilly      |'
 echo '   --------------------------------------------------------------------------------'
 echo
 echo ARGUMENTS

@@ -261,15 +261,22 @@ plot_cnv_qc=function(stats, outdf, plinkcall, alldepth, segments){
   topcp=ceiling(max(u/chrdp, na.rm=T)*2)/2;
   dmin=alldepth[pos>start & pos<stop,];
         
-  plot(u/chrdp, col=attgeno+1, pch=19, xaxt="n", xlab="samples", ylab="normalised depth", 
+  plot(u/chrdp, col=attgeno+1, pch=19, xaxt="n", xlab="", ylab="normalised depth", 
        main=paste(chr, paste(start, stop, sep="-"), sep=":"), ylim=c(0, topcp+0.1),  mgp=c(2,1,0));
+       mtext("samples", side=1, line=1.8)
   lal=apply(dmin, 1, function(x){as.numeric(as.character(x))/chrdp});
   nsnps=ncol(lal)
   k=ceiling(nsnps/10)
-  plot(0, xlim=c(1, nsnps), ylim=c(0, topcp+0.1), type="n", xaxt="n", xlab="position", ylab="normalised depth", main=paste(ncol(lal), "SNPs"),  mgp=c(2,1,0));
+  #plot(0, xlim=c(1, nsnps), ylim=c(0, topcp+0.1), type="n", xaxt="n", xlab="position", ylab="normalised depth", main=paste(ncol(lal), "SNPs"),  mgp=c(2,1,0));
+  mpos=pos[pos>start & pos<stop]
+  mposs=sort(mpos)
+  plot(0, xlim=c(mposs[k], mposs[length(mposs)]), ylim=c(0, topcp+0.1), type="n", xlab="", ylab="normalised depth", main=paste(ncol(lal), "SNPs"));
+  mtext(paste("position on chromosome ", chr), side=1, line=1.8)
+
     cat(" [from script (plot_cnv_qc) (DEBUG):]      Drawing lines with n=", nsnps, " and k=", k, " for event ",chr, ":",start, "-", stop, " ", nrow(dmin)/9, "\n")
   #lal=lal[1:3,]
-  apply(lal, 1, function(x) {lines(rollmean(x, k))})
+  #apply(lal, 1, function(x) {lines(rollmean(x, k))})
+  apply(lal, 1, function(x) {lines(x=rollmax(mpos, k), y=rollmean(x, k))})
   #dev.off()
 
   ## third plot : comparison
