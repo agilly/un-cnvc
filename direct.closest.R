@@ -1,4 +1,4 @@
-#!/software/R-3.3.0/bin/Rscript --vanilla
+#!/usr/bin/env Rscript --vanilla
 args=commandArgs(trailingOnly = T)
 freal=args[1]
 chrdp=args[2]
